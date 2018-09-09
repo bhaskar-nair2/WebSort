@@ -3,7 +3,7 @@ function app() {
         for (let i = 0; i < Object.keys(data).length; i++) {
             console.log(data[i]);
             $('.inner').append(
-                "<p>"+data[i].name+"</p>"
+                "<p>" + data[i].name + "</p>"
             )
         }
     })
