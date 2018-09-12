@@ -6,12 +6,13 @@
 body {
     display: grid;
     grid-gap: 30px;
-    grid-template-rows: [nav]3vh [sort]auto [refresh]auto [footer]3vh;
-    grid-template-columns: 20vw 45vw [log]15vw 20vw;
+    grid-template-rows: [nav] 3vh [sort] auto [refresh] auto [footer] 3vh;
+    grid-template-columns: 20vw 45vw [log] 15vw 20vw;
     text-align: center;
     font-family: Ubuntu-L !important;
 }
-#logger{
+
+#logger {
     height: -webkit-fill-available;
     font-size: 15px;
     color: #202746;
@@ -41,4 +42,12 @@ footer {
     background-color: rgba(2, 3, 4, 0.5);
     grid-row: footer;
     grid-column: 2;
+}
+
+.sortdiv {
+    display: grid;
+    margin-top: 10px;
+    border: 1px solid black;
+    padding: 15px;
+    grid-template-columns: 50% 50%;
 }

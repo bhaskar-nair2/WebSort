@@ -3,7 +3,8 @@ import sqlite3 as sql
 from queue import Queue
 
 db = 'static/data/SearchDB'
-waste_list = ['inj', 'tab', 'cap', 'inhaler', 'respules', 'rotacaps', 'syp', 'eye', 'drop', 'lotion', 'oint', 'alpha']
+waste_list = ['inj', 'tab', 'cap', 'inhaler', 'respules', 'rotacaps', 'syp', 'eye', 'drop', 'lotion', 'oint', 'alpha',
+              'tap', '/', '%', '(', ')', '-']
 
 
 def cleaner(val):
@@ -32,13 +33,14 @@ class IdDataMaker:
         name_lst = sheet['C'][1:]
         qty_lst = sheet['F'][1:]
         for _ in range(len(name_lst)):
-            if _ % 10 == 0 or _ == len(name_lst):
-                self.status.put(f'Done about {_/len(name_lst)*100}%')
+            if _ % 50 == 0 or _ == len(name_lst):
+                self.status.put(f'Done about {round(_/len(name_lst)*100)}%')
             if name_lst[_].value is None:
                 break
-            value = [cleaner(str(name_lst[_].value).lower().strip()),
+            value = [str(name_lst[_].value.lower().strip()),
                      cleaner(str(name_lst[_].value).lower().strip()).replace(' ', ''), qty_lst[_].value]
             self.insert(value)
+        self.status.put('Insertion Done!!')
         self.status.put('Sorting Done!!')
 
     def clear_db(self):
@@ -61,15 +63,15 @@ class IdDataMaker:
 
 
 class ReDataMaker:
-    def __init__(self, file, pa_count, queue):
+    def __init__(self, file, queue, *args):
         self.file = load_workbook(file)
         try:
             con = sql.connect(db, isolation_level=None)
             self.cur = con.cursor()
         except sql.OperationalError as e:
             print(f'Error in init: {e}')
-        self.pa_count = pa_count
-        self.tblN = ['paSearchList', 'rcSearchList']
+        self.pa_count = args
+        self.tblN = ['gpaSearchList', 'spaSearchList', 'rcSearchList']
         self.status = queue
 
     def refresh(self):
@@ -78,10 +80,10 @@ class ReDataMaker:
         self.clear_db()
         for sheet_index in range(0, len(self.file.sheetnames)):
             self.file._active_sheet_index = sheet_index
-            self.status.put(f"Now Inserting {self.file.active}")
+            self.status.put(f"Now Inserting {self.file.sheetnames[self.file._active_sheet_index]} into Database")
             sheet = self.file.active
-            if not sheet_index < self.pa_count:
-                tbl_set = 1
+            if not sheet_index < self.pa_count[tbl_set]:
+                tbl_set += 1
             contract_lst = sheet['B'][1:]
             name_lst = sheet['C'][1:]
             unit_lst = sheet['D'][1:]
@@ -97,7 +99,7 @@ class ReDataMaker:
                          coy_lst[_].value,
                          rate_lst[_].value, gst_lst[_].value, supplier_lst[_].value]
                 self.insert(self.tblN[tbl_set], value)
-        print('Refresh Done!!!')
+        self.status.put('Refresh Done!!')
 
     def clear_db(self):
         try:
@@ -130,11 +132,3 @@ class ReDataMaker:
             self.cur.execute(que)
             que = f"insert into {tbl} (contract, name, unit, coy, rate, gst, supplier) values (?,?,?,?,?,?,?)"
             self.cur.execute(que, values)
-
-
-class Sorter:
-    def __init__(self):
-        con = sql.connect(db, isolation_level=None)
-        self.cur = con.cursor()
-        self.data_tbl = ['rcSearchList', 'paSearchList']
-        self.ind_tbl = ['indentList']

@@ -8,6 +8,27 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
+
+<div id="downModal" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Download File</h3>
+                <button type="button" class="close" data-dismiss="modal" aria-label="close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+               <p>New File generated, Please click Download to start downloading the file...</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="down()">Download</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="sort">
     <h1 style="text-align: center">Sort Indent File</h1>
     <h5>Insert your new Indent file here to sort and get results</h5>
@@ -37,12 +58,12 @@
             </li>
         </ol>
     </div>
-    <div style="margin-top: 10px; border: 1px solid black; padding: 5px">
-        <form id="upload-file" method="post" enctype="multipart/form-data">
-            <label for="file">Select a file</label>
-            <input name="file" type="file"><br>
+    <div class="sortdiv">
+        <form id="upload-file" method="post" enctype="multipart/form-data" style="grid-column: 1">
+            <input name="file" type="file" style="padding: 10px"><br>
             <button class="btn btn-success" id="upload-file-btn" type="button">Sort File</button>
         </form>
+        <button class="btn btn-danger" type="button" style="grid-column: 2" disabled>Download File</button>
     </div>
 </div>
 
@@ -54,7 +75,7 @@
     <p>Please Make sure that- </p>
     <div style="border: 1px solid black">
         <ol style="padding: 5px; margin-left: 30px; text-align: left; width: fit-content">
-            <li>The PA sheets(GPA,SPA) are placed before RC Sheets</li>
+            <li>The Sheets are placed in the order GPA->SPA->RC</li>
             <li>The first Row of each sheet has the heading for that column</li>
             <li>Each Sheet Follows The given format
                 <table border="1" cellpadding="5px" style="margin: 5px">
@@ -89,8 +110,13 @@
     </div>
     <div style="margin-top: 10px; border: 1px solid black; padding: 5px">
         <form id="refresh-file" method="post" enctype="multipart/form-data">
-            <label for="pa_count">Number Of PA Sheets</label>
+
+            <label for="pa_count">Number Of GPA Sheets</label>
             <input id="pa_count" name="pa_count" type="number"><br>
+             <label for="spa_count">Number Of SPA Sheets</label>
+            <input id="spa_count" name="spa_count" type="number"><br>
+            <label for="rc_count">Number Of RC Sheets</label>
+            <input id="rc_count" name="rc_count" type="number"><br>
             <label for="file">Select a file</label>
             <input name="file" type="file"><br>
             <button class="btn btn-warning" id="refresh-file-btn" type="button">Refresh Database</button>
@@ -98,8 +124,9 @@
     </div>
 </div>
 
+
 <div id="logger">
-Logs Go Here!
+    Logs Go Here!
 </div>
 
 <footer>

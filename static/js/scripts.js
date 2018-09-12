@@ -1,14 +1,38 @@
 let socket = io.connect();
 socket.on('update', function (msg) {
     $('#logger').append(
-        '<p>' + msg.current + '</p>'
+        '<p>' + msg.text + '</p>'
     );
-    if (msg.current === 'OVER') {
+    if (msg.status === 210) {
         $('#logger').html(
             '<p>Insertion DONE!!!<br>Now Sorting Items</p>'
         );
     }
+    if (msg.status === 220) {
+        window.alert('REfresh Done!!');
+        $('#logger').html(
+            '<p>Refresh data completed!!</p>'
+        );
+    }
+    if (msg.status === 200) {
+        window.alert('Sorting Done!!');
+        $('#downModal').modal('show')
+    }
 });
+
+socket.on('NOFILE', function (msg) {
+    window.alert('File Error: ' + msg.msg)
+});
+socket.on('WRONGFILE', function (msg) {
+    window.alert('File Error: ' + msg.msg)
+});
+socket.on('OK', function (msg) {
+    window.alert('Request Sent!!')
+});
+
+function down() {
+
+}
 
 function app() {
     $.getJSON('/api/test', function (data) {
@@ -23,6 +47,7 @@ function app() {
 
 $(function () {
     $('#upload-file-btn').click(function () {
+
         let form_data = new FormData($('#upload-file')[0]);
         $.ajax({
             type: 'POST',

@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, emit
 from werkzeug.utils import secure_filename
+from werkzeug import exceptions
 from datetime import date
 import Sorter
 import os
@@ -28,35 +29,52 @@ def index():
 
 @app.route('/api/refresh', methods=['POST'])
 def refresh():
-    pa_count = request.form['pa_count']
-    file = request.files['file']
-    filename = str(date.today()) + secure_filename(file.filename)
-    if file and allowed_file(filename):
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        re_thread = threading.Thread(target=lambda: re_threader(app.config['UPLOAD_FOLDER'] + filename, int(pa_count)))
-        re_thread.start()
-    else:
-        print('File Not Valid!')
+    try:
+        gpa_count = request.form['pa_count']
+        spa_count = request.form['spa_count']
+        rc_count = request.form['rc_count']
+        file = request.files['file']
+        filename = str(date.today()) + secure_filename(file.filename)
+        if file and allowed_file(filename):
+            socket.emit('OK', {"msg": ""})
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            re_thread = threading.Thread(
+                target=lambda: re_threader(app.config['UPLOAD_FOLDER'] + filename, int(gpa_count),
+                                           int(gpa_count) + int(spa_count),
+                                           int(gpa_count) + int(spa_count) + int(rc_count)))
+            status_handle = threading.Thread(target=que_handeler)
+            re_thread.start()
+            status_handle.start()
+        else:
+            socket.emit('WRONGFILE', {"msg": "Incorrect File Formt!"})
+    except exceptions.HTTPException as e:
+        print(e)
+        socket.emit('NOFILE', {"msg": "No file provided!!"})
     return render_template('index.html')
 
 
-def re_threader(file_loc, pacount):
-    re = Sorter.ReDataMaker(file_loc, pacount)
+def re_threader(file_loc, pacount, spacount, rccount):
+    re = Sorter.ReDataMaker(file_loc, status_q, pacount, spacount, rccount)
     re.refresh()
 
 
 @app.route('/api/sort', methods=['POST'])
 def sort_it():
-    file = request.files['file']
-    filename = str(date.today()) + secure_filename(file.filename)
-    if file and allowed_file(filename):
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        sort_thread = threading.Thread(target=lambda: sort_threader(app.config['UPLOAD_FOLDER'] + filename))
-        status_handle = threading.Thread(target=que_handeler)
-        sort_thread.start()
-        status_handle.start()
-    else:
-        print('File Not Valid!')
+    try:
+        file = request.files['file']
+        filename = str(date.today()) + secure_filename(file.filename)
+        if file and allowed_file(filename):
+            socket.emit('OK', {"msg": ""})
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            sort_thread = threading.Thread(target=lambda: sort_threader(app.config['UPLOAD_FOLDER'] + filename))
+            status_handle = threading.Thread(target=que_handeler)
+            sort_thread.start()
+            status_handle.start()
+        else:
+            socket.emit('WRONGFILE', {"msg": "Incorrect File Formt!"})
+    except exceptions.HTTPException as e:
+        print(e)
+        socket.emit('NOFILE', {"msg": "No file provided!!"})
     return render_template('index.html')
 
 
@@ -70,9 +88,14 @@ def que_handeler():
         try:
             txt = status_q.get(True, 0.1)
             print(txt)
-            socket.emit('update', {"current": txt})
+            socket.emit('update', {"status": 110, "text": txt})
+            if txt == 'Insertion Done!!':
+                socket.emit('update', {"status": 210, "text": "Insertion Done"})
+            if txt == 'Refresh Done!!':
+                socket.emit('update', {"status": 220, "text": 'Refreshed!'})
+                break
             if txt == 'Sorting Done!!':
-                socket.emit('update', {"current": 'OVER'})
+                socket.emit('update', {"status": 200, "text": 'Completed'})
                 break
         except queue.Empty:
             pass
@@ -104,4 +127,4 @@ def allowed_file(filename):
 
 
 if __name__ == '__main__':
-    socket.run(app, port=3000)
+    socket.run(app, port=3000, debug=True)
