@@ -127,4 +127,4 @@ def allowed_file(filename):
 
 
 if __name__ == '__main__':
-    socket.run(app, port=3000, debug=True)
+    socket.run(app, host='0.0.0.0')
