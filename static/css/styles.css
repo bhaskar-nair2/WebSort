@@ -1,0 +1,44 @@
+@font-face {
+    font-family: Ubuntu-L;
+    src: url("../fonts/Ubuntu-R.ttf");
+}
+
+body {
+    display: grid;
+    grid-gap: 30px;
+    grid-template-rows: [nav]3vh [sort]auto [refresh]auto [footer]3vh;
+    grid-template-columns: 20vw 45vw [log]15vw 20vw;
+    text-align: center;
+    font-family: Ubuntu-L !important;
+}
+#logger{
+    height: -webkit-fill-available;
+    font-size: 15px;
+    color: #202746;
+    grid-column: log;
+    grid-row: sort / span 2;
+    overflow: scroll;
+    margin: 20px;
+    border: 1px solid rebeccapurple;
+}
+
+.sort {
+    grid-row: sort;
+    grid-column: 2;
+    border: 3px solid rebeccapurple;
+    padding: 2vh
+}
+
+.refresh {
+    grid-row: refresh;
+    grid-column: 2;
+    border: 3px solid rebeccapurple;
+    padding: 2vh
+}
+
+footer {
+    color: white;
+    background-color: rgba(2, 3, 4, 0.5);
+    grid-row: footer;
+    grid-column: 2;
+}
