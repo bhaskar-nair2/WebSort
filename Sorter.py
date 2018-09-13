@@ -1,15 +1,18 @@
-from openpyxl import load_workbook
+from openpyxl import load_workbook, Workbook
 import sqlite3 as sql
+from re import sub
+from datetime import date
 from queue import Queue
 
 db = 'static/data/SearchDB'
 waste_list = ['inj', 'tab', 'cap', 'inhaler', 'respules', 'rotacaps', 'syp', 'eye', 'drop', 'lotion', 'oint', 'alpha',
-              'tap', '/', '%', '(', ')', '-']
+              'tap', '/', '%', '-']
 
 
 def cleaner(val):
     for _ in waste_list:
         val = val.replace(_, '').strip()
+        val = sub(r'[(\[].+?[)\]]', '', val)
     return val
 
 
@@ -41,7 +44,28 @@ class IdDataMaker:
                      cleaner(str(name_lst[_].value).lower().strip()).replace(' ', ''), qty_lst[_].value]
             self.insert(value)
         self.status.put('Insertion Done!!')
+        return self.file_gen()
+
+    def file_gen(self):
+        wb = Workbook()
+        ws = wb.create_sheet('Sorted By Supplier', 0)
+        rs_found = self.cur.execute('select * from final_list order by supplier;')
+        names_found = [description[0] for description in self.cur.description]
+        ws.append(names_found)
+        for _ in rs_found.fetchall():
+            ws.append(_)
+        ws.append(['', 'ITEMS NOT FOUND', ''])
+        rs_not_found = self.cur.execute('select * from not_found;')
+        names_not_found = [description[0] for description in self.cur.description]
+        ws.append(names_not_found)
+        for _ in rs_not_found:
+            ws.append(_)
+        filename = f'created{date.today()}.xlsx'
+        filepath = './static/uploads/' + filename
+        wb.save(filepath)
+        self.status.put(f':{filepath}:')
         self.status.put('Sorting Done!!')
+        return filepath
 
     def clear_db(self):
         que = f"delete from {self.tbl_name}"
@@ -97,7 +121,7 @@ class ReDataMaker:
                 value = [contract_lst[_].value, cleaner(str(name_lst[_].value).lower().strip()).replace(' ', ''),
                          unit_lst[_].value,
                          coy_lst[_].value,
-                         rate_lst[_].value, gst_lst[_].value, supplier_lst[_].value]
+                         rate_lst[_].value, gst_lst[_].value, str(supplier_lst[_].value).replace('\n', '')]
                 self.insert(self.tblN[tbl_set], value)
         self.status.put('Refresh Done!!')
 

@@ -7,10 +7,11 @@ import Sorter
 import os
 import threading
 import queue
+from re import findall
 
 # TODO:
 # Search Algorithm
-# Yeild data to sockets
+# Yield data to sockets
 
 UPLOAD_FOLDER = './static/uploads/'
 ALLOWED_EXTENSIONS = ['xlsx', 'png']
@@ -25,6 +26,10 @@ status_q = queue.Queue()
 @app.route('/')
 def index():
     return render_template('index.html')
+
+
+def wrapper(func, arg, res):
+    res.append(func(arg))
 
 
 @app.route('/api/refresh', methods=['POST'])
@@ -70,6 +75,8 @@ def sort_it():
             status_handle = threading.Thread(target=que_handeler)
             sort_thread.start()
             status_handle.start()
+            sort_thread.join()
+            status_handle.join()
         else:
             socket.emit('WRONGFILE', {"msg": "Incorrect File Formt!"})
     except exceptions.HTTPException as e:
@@ -91,12 +98,14 @@ def que_handeler():
             socket.emit('update', {"status": 110, "text": txt})
             if txt == 'Insertion Done!!':
                 socket.emit('update', {"status": 210, "text": "Insertion Done"})
-            if txt == 'Refresh Done!!':
+            elif txt == 'Refresh Done!!':
                 socket.emit('update', {"status": 220, "text": 'Refreshed!'})
                 break
-            if txt == 'Sorting Done!!':
+            elif txt == 'Sorting Done!!':
                 socket.emit('update', {"status": 200, "text": 'Completed'})
                 break
+            elif findall(':.+?:', txt):
+                socket.emit('filepath', {"status": 200, "text": txt.replace(':', '')})
         except queue.Empty:
             pass
 

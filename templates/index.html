@@ -19,10 +19,12 @@
                 </button>
             </div>
             <div class="modal-body">
-               <p>New File generated, Please click Download to start downloading the file...</p>
+                <p>New File generated, Please click Download to start downloading the file...</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" onclick="down()">Download</button>
+                <button type="button" class="btn btn-primary" onclick="down()"><a id="download" download=""
+                                                                                  style="color: white !important;">Download!</a>
+                </button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
             </div>
         </div>
@@ -63,7 +65,10 @@
             <input name="file" type="file" style="padding: 10px"><br>
             <button class="btn btn-success" id="upload-file-btn" type="button">Sort File</button>
         </form>
-        <button class="btn btn-danger" type="button" style="grid-column: 2" disabled>Download File</button>
+
+        <button id="downloadBTN" data-target="#downModal" data-toggle="modal" class="btn btn-danger" type="button"
+                style="grid-column: 2" disabled>Download
+        </button>
     </div>
 </div>
 
@@ -113,7 +118,7 @@
 
             <label for="pa_count">Number Of GPA Sheets</label>
             <input id="pa_count" name="pa_count" type="number"><br>
-             <label for="spa_count">Number Of SPA Sheets</label>
+            <label for="spa_count">Number Of SPA Sheets</label>
             <input id="spa_count" name="spa_count" type="number"><br>
             <label for="rc_count">Number Of RC Sheets</label>
             <input id="rc_count" name="rc_count" type="number"><br>

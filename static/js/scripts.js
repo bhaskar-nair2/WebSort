@@ -1,3 +1,4 @@
+let filepath = '';
 let socket = io.connect();
 socket.on('update', function (msg) {
     $('#logger').append(
@@ -20,6 +21,12 @@ socket.on('update', function (msg) {
     }
 });
 
+socket.on('filepath', function (msg) {
+    $('#downloadBTN').prop('disabled', false);
+    filepath = msg.text;
+    console.log(filepath);
+    $('#download').attr('href',filepath)
+});
 socket.on('NOFILE', function (msg) {
     window.alert('File Error: ' + msg.msg)
 });
