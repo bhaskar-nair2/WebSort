@@ -34,7 +34,7 @@ class IdDataMaker:
         qty_lst = sheet['F'][1:]
         for _ in range(len(name_lst)):
             if _ % 50 == 0 or _ == len(name_lst):
-                self.status.put(f'Done about {round(_/len(name_lst)*100)}%')
+                self.status.put(f"Done about {round(_/len(name_lst)*100)}%")
             if name_lst[_].value is None:
                 break
             value = [str(name_lst[_].value.lower().strip()),
