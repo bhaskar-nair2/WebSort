@@ -40,7 +40,7 @@ class IdDataMaker:
                 self.status.put(f"Done about {round(_/len(name_lst)*100)}%")
             if name_lst[_].value is None:
                 break
-            value = [str(name_lst[_].value.lower().strip()),
+            value = [str(name_lst[_].value).lower().strip(),
                      cleaner(str(name_lst[_].value).lower().strip()).replace(' ', ''), qty_lst[_].value]
             self.insert(value)
         self.status.put('Insertion Done!!')
@@ -139,8 +139,8 @@ class ReDataMaker:
             try:
                 self.cur.execute(que, values)
                 print(f"Inserting into {tbl} with {values[0]},{values[1]},{values[6]}")
-            except sql.IntegrityError as e:
-                print(e, f"Error In {values[0]},{values[1]},{values[6]}")
+            except Exception as e:
+                print(e)
                 pass
         except sql.OperationalError:
             que = f"""create table {tbl} (
