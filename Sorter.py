@@ -28,7 +28,7 @@ class IdDataMaker:
         self.tbl_name = 'indentList'
         self.status = queue
         self.columns = ['Indent No', 'Contract No', "Nomenclature",
-                        "Unit", "Company", "Rate", "Quantity", "Amount", "Supplier"]
+                        "Unit", "Company", "Rate", "Quantity", "Amount", "Supplier", 'from_date', "to_date"]
 
     def createData(self):
         pass
@@ -110,12 +110,12 @@ class IdDataMaker:
         self.status.put('Creating Views')
         views = [
             {'ref': 'mrc_view', 'table': 'rc', 'extra': True},
-            {'ref': 'gpa_view', 'table': 'gpa','extra': False},
-            {'ref': 'spa_view', 'table': 'spa','extra': False}
+            {'ref': 'gpa_view', 'table': 'gpa', 'extra': False},
+            {'ref': 'spa_view', 'table': 'spa', 'extra': False}
         ]
         for view in views:
             cols = "i.indref, g.contract, i.name, g.unit, g.coy, g.rate, i.qty, g.gst, g.supplier"
-            if(view['extra']==True):
+            if(view['extra'] == True):
                 cols += ", g.to_date, g.from_date "
             que = f"""CREATE view {view['ref']} as
             select {cols}
