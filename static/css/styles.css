@@ -1,53 +1,59 @@
 @font-face {
-    font-family: Ubuntu-L;
-    src: url("../fonts/Ubuntu-R.ttf");
+  font-family: Ubuntu-L;
+  src: url("../fonts/Ubuntu-R.ttf");
 }
 
 body {
-    display: grid;
-    grid-gap: 30px;
-    grid-template-rows: [nav] 3vh [sort] auto [refresh] auto [footer] 3vh;
-    grid-template-columns: 10vw 55vw [log]25vw 10vw;
-    text-align: center;
-    font-family: Ubuntu-L !important;
+  display: grid;
+  grid-gap: 10px;
+  grid-template-rows:  3vh [sort] auto [refresh] auto [footer] 3vh;
+  grid-template-columns: [nav] 10vw 55vw [log]25vw 10vw;
+  text-align: center;
+  font-family: Ubuntu-L !important;
+}
+
+.navHolder {
+  grid-row: 2 / span 4;
+  grid-column: nav;
+  border-right: 2px solid saddlebrown;
 }
 
 #logger {
-    height: -webkit-fill-available;
-    font-size: 15px;
-    color: #202746;
-    grid-column: log;
-    grid-row: sort / span 2;
-    overflow: scroll;
-    margin: 20px;
-    border: 1px solid rebeccapurple;
+  height: -webkit-fill-available;
+  font-size: 15px;
+  color: #202746;
+  grid-column: log;
+  grid-row: sort / span 2;
+  overflow: scroll;
+  margin: 20px;
+  border: 1px solid rebeccapurple;
 }
 
 .sort {
-    grid-row: sort;
-    grid-column: 2;
-    border: 3px solid rebeccapurple;
-    padding: 2vh
+  grid-row: sort;
+  grid-column: 2;
+  border: 3px solid rebeccapurple;
+  padding: 2vh;
 }
 
 .refresh {
-    grid-row: refresh;
-    grid-column: 2;
-    border: 3px solid rebeccapurple;
-    padding: 2vh
+  grid-row: refresh;
+  grid-column: 2;
+  border: 3px solid rebeccapurple;
+  padding: 2vh;
 }
 
 footer {
-    color: white;
-    background-color: rgba(2, 3, 4, 0.5);
-    grid-row: footer;
-    grid-column: 2 /4;
+  color: white;
+  background-color: rgba(2, 3, 4, 0.5);
+  grid-row: footer;
+  grid-column: 2 /4;
 }
 
 .sortdiv {
-    display: grid;
-    margin-top: 10px;
-    border: 1px solid black;
-    padding: 15px;
-    grid-template-columns: 50% 50%;
+  display: grid;
+  margin-top: 10px;
+  border: 1px solid black;
+  padding: 15px;
+  grid-template-columns: 50% 50%;
 }

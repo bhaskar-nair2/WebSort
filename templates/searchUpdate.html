@@ -15,114 +15,7 @@
     />
   </head>
   <body>
-    <nav class="navHolder">
-      <h2>Links</h2>
-      <ul style="list-style: none;">
-        <li>
-          <a href="/updatesearch">Update Search File</a>
-        </li>
-      </ul>
-    </nav>
-    <div id="downModal" class="modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3>Download File</h3>
-            <button
-              type="button"
-              class="close"
-              data-dismiss="modal"
-              aria-label="close"
-            >
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <p>
-              New File generated, Please click Download to start downloading the
-              file...
-            </p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary" onclick="down()">
-              <a id="download" download="" style="color: white !important;"
-                >Download!</a
-              >
-            </button>
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-dismiss="modal"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="sort">
-      <h1 style="text-align: center">Sort Indent File</h1>
-      <h5>Insert your new Indent file here to sort and get results</h5>
-      <p>Please Make Sure that-</p>
-      <div style="border: 1px solid black">
-        <ol
-          style="padding: 5px; margin-left: 30px; text-align: left; width: fit-content"
-        >
-          <li>All your Indent items are in the first sheet</li>
-          <li>
-            The indent sheet follows the given format
-            <table border="1" cellpadding="5px">
-              <tr>
-                <td>A</td>
-                <td>B</td>
-                <td>C</td>
-                <td>D</td>
-                <td>E</td>
-                <td>F</td>
-              </tr>
-              <tr>
-                <td>S No</td>
-                <td>Indent No(Unique)*</td>
-                <td>Nomenclature*</td>
-                <td>Unit</td>
-                <td>MMF</td>
-                <td>Qty Required</td>
-              </tr>
-            </table>
-
-            <small>* Mandatory Field </small>
-          </li>
-        </ol>
-      </div>
-      <div class="sortdiv">
-        <form
-          id="upload-file"
-          method="post"
-          enctype="multipart/form-data"
-          style="grid-column: 1"
-        >
-          <input name="file" type="file" style="padding: 10px" /><br />
-          <button class="btn btn-success" id="upload-file-btn" type="button">
-            Sort File
-          </button>
-        </form>
-
-        <button
-          id="downloadBTN"
-          data-target="#downModal"
-          data-toggle="modal"
-          class="btn btn-danger"
-          type="button"
-          style="grid-column: 2"
-          disabled
-        >
-          Download
-        </button>
-      </div>
-    </div>
-
-    <!-- <div class="refresh">
+    <div class="refresh">
       <h1 style="text-align: center">Refresh Database</h1>
       <h5>
         Insert your search file here to refresh database. Only do this if
@@ -168,7 +61,7 @@
               </tr>
             </table>
 
-            <small>* Mandatory Field</small>
+            <small>* means required</small>
           </li>
           <li>
             Of the given Columns only Name and Contract are mandatory to be
@@ -191,7 +84,7 @@
           </button>
         </form>
       </div>
-    </div> -->
+    </div>
 
     <div id="logger">
       Logs Go Here!

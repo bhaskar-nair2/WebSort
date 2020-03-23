@@ -14,7 +14,7 @@ from re import findall
 # Yield data to sockets
 
 UPLOAD_FOLDER = './static/uploads/'
-ALLOWED_EXTENSIONS = ['xlsx', 'png']
+ALLOWED_EXTENSIONS = ['xlsx']
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -26,6 +26,10 @@ status_q = queue.Queue()
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/updatesearch')
+def update():
+    return render_template('searchUpdate.html')
 
 
 def wrapper(func, arg, res):
