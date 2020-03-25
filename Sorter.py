@@ -28,23 +28,28 @@ class IdDataMaker:
         self.tbl_name = 'indentList'
         self.status = queue
         self.columns = ['Indent No', 'Contract No', "Nomenclature",
-                        "Unit", "Company", "Rate", "Quantity", "Amount", "Supplier", 'from_date', "to_date"]
+                        "Unit", "Company", "Rate", "Quantity", "Amount", "GST", "Total Amount", "Supplier", 'from_date', "to_date"]
 
     def createData(self):
         pass
 
     def data_gen(self):
-        self.status.put('Sorting Starts!!!')
+        flag = False
+        self.status.put(f"Sorting Starts at {date.today()}")
         self.clear_db()
         self.file._active_sheet_index = 0
         sheet = self.file.active
-        indref_lst = sheet['B'][1:]
-        name_lst = sheet['C'][1:]
-        qty_lst = sheet['E'][1:]
+        indref_lst = sheet['A'][1:]
+        name_lst = sheet['B'][1:]
+        qty_lst = sheet['D'][1:]
         for _ in range(len(name_lst)):
             if _ % 50 == 0 or _ == len(name_lst):
                 self.status.put(f"Done about {round(_/len(name_lst)*100)}%")
+                flag = False
             if name_lst[_].value is None:
+                flag = True
+                continue
+            if flag == True:
                 break
             value = [indref_lst[_].value, str(name_lst[_].value).lower().strip(),
                      cleaner(str(name_lst[_].value)),
@@ -65,9 +70,10 @@ class IdDataMaker:
             for view in views:
                 ws = wb.create_sheet(f"{view['table']}-{today}", 0)
                 rs_found = self.cur.execute(
-                    f"select * from {view['ref']} order by name")
+                    f"select * from {view['ref']} order by indref")
                 ws.append(self.columns)
-                for _ in rs_found.fetchall():
+                res_list = rs_found.fetchall()
+                for _ in res_list:
                     ws.append(_)
         except sql.OperationalError as e:
             print(self.__class__, f"Error{e}")
@@ -75,8 +81,8 @@ class IdDataMaker:
         # Not found
         ws = wb.create_sheet("Not Found", 0)
         ws.append(['', 'ITEMS NOT FOUND', ''])
-        ws.append(self.columns)
-        rs_not_found = self.cur.execute('select indref,name from not_found;')
+        ws.append(["Indent Ref", "Name", "Quantity"])
+        rs_not_found = self.cur.execute('select * from not_found;')
         for _ in rs_not_found:
             ws.append(_)
 
@@ -114,7 +120,8 @@ class IdDataMaker:
             {'ref': 'spa_view', 'table': 'spa', 'extra': False}
         ]
         for view in views:
-            cols = "i.indref, g.contract, i.name, g.unit, g.coy, g.rate, i.qty, g.gst, g.supplier"
+            cols = "i.indref, g.contract, i.name, g.unit, g.coy, g.rate, i.qty, g.rate*i.qty as amount, \
+			        g.gst, (g.rate*i.qty*gst)+(g.rate*i.qty) as totalAmount,  g.supplier"
             if(view['extra'] == True):
                 cols += ", g.to_date, g.from_date "
             que = f"""CREATE view {view['ref']} as
@@ -141,7 +148,7 @@ class IdDataMaker:
         self.status.put('Making Not Found')
         try:
             que = f"""CREATE view not_found as 
-                select i.indref, i.name  
+                select i.indref, i.name, i.qty 
                 from indentList i 
                 WHERE indref not in (select indref from mrc_view) 
                 and indref not in (select indref from spa_view) 
