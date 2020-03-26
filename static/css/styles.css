@@ -6,8 +6,8 @@
 body {
   display: grid;
   grid-gap: 10px;
-  grid-template-rows:  3vh [sort] auto [refresh] auto [footer] 3vh;
-  grid-template-columns: [nav] 10vw 55vw [log]25vw 10vw;
+  grid-template-rows: [header]3vh [data] auto [footer] 3vh;
+  grid-template-columns: [nav]10vw [data]55vw [log]25vw 10vw;
   text-align: center;
   font-family: Ubuntu-L !important;
 }
@@ -15,7 +15,18 @@ body {
 .navHolder {
   grid-row: 2 / span 4;
   grid-column: nav;
+  display: flex;
+  flex-flow: column;
   border-right: 2px solid saddlebrown;
+}
+
+.navList {
+  text-align: left;
+  list-style: disc;
+}
+
+a:active{
+  color: red;
 }
 
 #logger {
@@ -23,21 +34,14 @@ body {
   font-size: 15px;
   color: #202746;
   grid-column: log;
-  grid-row: sort / span 2;
+  grid-row: 2;
   overflow: scroll;
   margin: 20px;
   border: 1px solid rebeccapurple;
 }
 
-.sort {
-  grid-row: sort;
-  grid-column: 2;
-  border: 3px solid rebeccapurple;
-  padding: 2vh;
-}
-
-.refresh {
-  grid-row: refresh;
+.main {
+  grid-row: data;
   grid-column: 2;
   border: 3px solid rebeccapurple;
   padding: 2vh;

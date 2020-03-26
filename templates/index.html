@@ -1,225 +1,94 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>WebSort by BStark.tech</title>
-    <link
-      rel="stylesheet"
-      href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
-      integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
-      crossorigin="anonymous"
-    />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/styles.css') }}"
-    />
-  </head>
-  <body>
-    <nav class="navHolder">
-      <h2>Links</h2>
-      <ul style="list-style: none;">
-        <li>
-          <a href="/updatesearch">Update Search File</a>
-        </li>
-      </ul>
-    </nav>
-    <div id="downModal" class="modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3>Download File</h3>
-            <button
-              type="button"
-              class="close"
-              data-dismiss="modal"
-              aria-label="close"
-            >
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <p>
-              New File generated, Please click Download to start downloading the
-              file...
-            </p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary" onclick="down()">
-              <a id="download" download="" style="color: white !important;"
-                >Download!</a
-              >
-            </button>
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-dismiss="modal"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="sort">
-      <h1 style="text-align: center">Sort Indent File</h1>
-      <h5>Insert your new Indent file here to sort and get results</h5>
-      <p>Please Make Sure that-</p>
-      <div style="border: 1px solid black">
-        <ol
-          style="padding: 5px; margin-left: 30px; text-align: left; width: fit-content"
-        >
-          <li>All your Indent items are in the first sheet</li>
-          <li>
-            The indent sheet follows the given format
-            <table border="1" cellpadding="5px">
-              <tr>
-                <td>A</td>
-                <td>B</td>
-                <td>C</td>
-                <td>D</td>
-                <td>E</td>
-                <td>F</td>
-              </tr>
-              <tr>
-                <td>S No</td>
-                <td>Indent No(Unique)*</td>
-                <td>Nomenclature*</td>
-                <td>Unit</td>
-                <td>MMF</td>
-                <td>Qty Required</td>
-              </tr>
-            </table>
-
-            <small>* Mandatory Field </small>
-          </li>
-        </ol>
-      </div>
-      <div class="sortdiv">
-        <form
-          id="upload-file"
-          method="post"
-          enctype="multipart/form-data"
-          style="grid-column: 1"
-        >
-          <input name="file" type="file" style="padding: 10px" /><br />
-          <button class="btn btn-success" id="upload-file-btn" type="button">
-            Sort File
-          </button>
-        </form>
-
+{% extends 'layout.html' %} {% block content %}
+<div id="downModal" class="modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Download File</h3>
         <button
-          id="downloadBTN"
-          data-target="#downModal"
-          data-toggle="modal"
-          class="btn btn-danger"
           type="button"
-          style="grid-column: 2"
-          disabled
+          class="close"
+          data-dismiss="modal"
+          aria-label="close"
         >
-          Download
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>
+          New File generated, Please click Download to start downloading the
+          file...
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="down()">
+          <a id="download" download="" style="color: white !important;"
+            >Download!</a
+          >
+        </button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+          Close
         </button>
       </div>
     </div>
+  </div>
+</div>
 
-    <!-- <div class="refresh">
-      <h1 style="text-align: center">Refresh Database</h1>
-      <h5>
-        Insert your search file here to refresh database. Only do this if
-        results are illegible or a new search file is made
-      </h5>
-      <p>Please Make sure that-</p>
-      <div style="border: 1px solid black">
-        <ol
-          style="padding: 5px; margin-left: 30px; text-align: left; width: fit-content"
-        >
-          <li>The Sheets are placed in the order GPA->SPA->RC</li>
-          <li>The first Row of each sheet has the heading for that column</li>
-          <li>
-            Each Sheet Follows The given format
-            <table border="1" cellpadding="5px" style="margin: 5px">
-              <tr>
-                <td>A</td>
-                <td>B</td>
-                <td>C</td>
-                <td>D</td>
-                <td>E</td>
-                <td>F</td>
-                <td>G</td>
-                <td>H</td>
-                <td>I</td>
-                <td>J</td>
-                <td>K</td>
-                <td>L</td>
-              </tr>
-              <tr>
-                <td>Sl No.</td>
-                <td>Indent No</td>
-                <td>Contract or PA/RC Number*</td>
-                <td>Name / Nomenclature*</td>
-                <td>A/U</td>
-                <td>Company</td>
-                <td>Rate</td>
-                <td></td>
-                <td></td>
-                <td>GST</td>
-                <td></td>
-                <td>Supplier</td>
-              </tr>
-            </table>
+<h1 style="text-align: center">Sort Indent File</h1>
+<h5>Insert your new Indent file here to sort and get results</h5>
+<p>Please Make Sure that-</p>
+<div style="border: 1px solid black">
+  <ol
+    style="padding: 5px; margin-left: 30px; text-align: left; width: fit-content"
+  >
+    <li>All your Indent items are in the first sheet</li>
+    <li>
+      The indent sheet follows the given format
+      <table border="1" cellpadding="5px">
+        <tr>
+          <td>A</td>
+          <td>B</td>
+          <td>C</td>
+          <td>D</td>
+          <td>E</td>
+          <td>F</td>
+        </tr>
+        <tr>
+          <td>S No</td>
+          <td>Indent No(Unique)*</td>
+          <td>Nomenclature*</td>
+          <td>Unit</td>
+          <td>MMF</td>
+          <td>Qty Required</td>
+        </tr>
+      </table>
 
-            <small>* Mandatory Field</small>
-          </li>
-          <li>
-            Of the given Columns only Name and Contract are mandatory to be
-            filled. Fill the rest with blank spaces if required
-          </li>
-        </ol>
-      </div>
-      <div style="margin-top: 10px; border: 1px solid black; padding: 5px">
-        <form id="refresh-file" method="post" enctype="multipart/form-data">
-          <label for="pa_count">Number Of GPA Sheets</label>
-          <input id="pa_count" name="pa_count" type="number" /><br />
-          <label for="spa_count">Number Of SPA Sheets</label>
-          <input id="spa_count" name="spa_count" type="number" /><br />
-          <label for="rc_count">Number Of RC Sheets</label>
-          <input id="rc_count" name="rc_count" type="number" /><br />
-          <label for="file">Select a file</label>
-          <input name="file" type="file" /><br />
-          <button class="btn btn-warning" id="refresh-file-btn" type="button">
-            Refresh Database
-          </button>
-        </form>
-      </div>
-    </div> -->
+      <small>* Mandatory Field </small>
+    </li>
+  </ol>
+</div>
+<div class="sortdiv">
+  <form
+    id="upload-file"
+    method="post"
+    enctype="multipart/form-data"
+    style="grid-column: 1"
+  >
+    <input name="file" type="file" style="padding: 10px" /><br />
+    <button class="btn btn-success" id="upload-file-btn" type="button">
+      Sort File
+    </button>
+  </form>
 
-    <div id="logger">
-      Logs Go Here!
-    </div>
-
-    <footer>
-      bstark.tech
-    </footer>
-
-    <script src="{{ url_for('static', filename='js/jquery-3.3.1.js') }}"></script>
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
-      integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
-      crossorigin="anonymous"
-    ></script>
-    <script
-      src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
-      integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
-      crossorigin="anonymous"
-    ></script>
-    <script
-      type="text/javascript"
-      src="{{ url_for('static', filename='js/socket.io.js') }}"
-    ></script>
-    <script
-      type="text/javascript"
-      src="{{ url_for('static', filename='js/scripts.js') }}"
-    ></script>
-    <script type="text/javascript"></script>
-  </body>
-</html>
+  <button
+    id="downloadBTN"
+    data-target="#downModal"
+    data-toggle="modal"
+    class="btn btn-danger"
+    type="button"
+    style="grid-column: 2"
+    disabled
+  >
+    Download
+  </button>
+</div>
+{% endblock %}
