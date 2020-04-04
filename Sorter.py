@@ -1,37 +1,88 @@
 from openpyxl import load_workbook, Workbook
+from openpyxl.styles import Font
 import sqlite3 as sql
 from re import sub
 from datetime import date
 from queue import Queue
+import os
 
 db = 'static/data/SearchDB'
-waste_list = ['tab', 'mg']
+
+views = [{'ref': 'mrc_view', 'table': 'rc'},
+         {'ref': 'gpa_view', 'table': 'gpa'},
+         {'ref': 'spa_view', 'table': 'spa'}]
+
+tables = ['gpaSearchList', 'spaSearchList', 'rcSearchList']
 
 
-def cleaner(val):
+alias_ignore = ['tab', 'mg', 'oint', 'ml', 'ointment', 'cap', 'per',
+                'mg', 'gm', 'amp', 'ampoule', 'cream', 'bott', 'bottle']
+
+guess_ignore = ['insulin', 'collection', 'purified', 'equivalent',
+                'containing', 'prefilled', 'syringe', 'closing',
+                'polythene', 'envelope', 'facility', 'disposable',
+                'plastic', 'sterile', 'suspension', 'inhaler', 'needles',
+                'injection', 'culture', 'solution', 'combination',
+                'sulphate', 'acetate', 'chloride'
+                ]
+
+
+def clean(val, type):
     val = val.lower().strip()
-    for _ in waste_list:
+    for _ in alias_ignore:
         val = val.replace(_, '').strip()
-        val = sub(r'[(\[].+?[)\]]', '', val)
+    if type == 'guess':
+        for _ in guess_ignore:
+            val = val.replace(_, '').strip()
+    val = sub(r'[(\[].+?[)\]]', ' ', val)
+    val = sub(r'[!@#$%^&*(),.?"/:{}|<>+=-]', ' ', val)
+    return val
+
+
+def makeAlias(val):
+    val = clean(val, 'alias')
+    val = val.split(' ')
+    val.sort()
+    val = ''.join(val)
+    val = ''.join(e for e in val if e.isalnum())
     return val.replace(' ', '')
+
+
+def makePrimary(val):
+    val = clean(val, 'guess')
+    arr = val.split(' ')
+    f_arr = list(filter(lambda e: len(e) > 6, arr))
+    if len(f_arr) == 0:
+        f_arr = f_arr = list(filter(lambda e: len(e) > 4, arr))
+    f_arr.sort(key=len, reverse=True)
+    return f_arr[0:5]
+
+
+def createUniqueTupleList(list):
+    uniq = []
+    for x in list:
+        if x[0] not in (y[0] for y in uniq):
+            uniq.append(x)
+    return uniq
 
 
 class IdDataMaker:
     def __init__(self, file, queue):
-        self.file = load_workbook(file)
+        tit = file.title()
+        fn = os.path.basename(tit)
+        self.file_name = fn.split('.')[0]
+        print(self.file_name)
+        self.file = load_workbook(file, data_only=True)
+        self.WB = Workbook()
         try:
             con = sql.connect(db, isolation_level=None)
             self.cur = con.cursor()
         except sql.OperationalError as e:
             print(self.__class__, f"Error {e}")
-
         self.tbl_name = 'indentList'
         self.status = queue
         self.columns = ['Indent No', 'Contract No', "Nomenclature",
                         "Unit", "Company", "Rate", "Quantity", "Amount", "GST", "Total Amount", "Supplier", 'from_date', "to_date"]
-
-    def createData(self):
-        pass
 
     def data_gen(self):
         flag = False
@@ -41,10 +92,10 @@ class IdDataMaker:
         sheet = self.file.active
         indref_lst = sheet['A'][1:]
         name_lst = sheet['B'][1:]
-        qty_lst = sheet['D'][1:]
+        qty_lst = sheet['C'][1:]
         for _ in range(len(name_lst)):
             if _ % 50 == 0 or _ == len(name_lst):
-                self.status.put(f"Done about {round(_/len(name_lst)*100)}%")
+                self.status.put(f"Done about {round(_/len(name_lst)*50)}%")
                 flag = False
             if name_lst[_].value is None:
                 flag = True
@@ -52,47 +103,77 @@ class IdDataMaker:
             if flag == True:
                 break
             value = [indref_lst[_].value, str(name_lst[_].value).lower().strip(),
-                     cleaner(str(name_lst[_].value)),
+                     makeAlias(str(name_lst[_].value)),
                      qty_lst[_].value,
                      ]
             self.insert(value)
         self.status.put('Insertion Done!!')
         self.create_views()
-        return self.file_gen()
+        self.create_table()
+        return self.add_found_results()
 
-    def file_gen(self):
+    def add_found_results(self):
         today = date.today()
-        wb = Workbook()
-        views = [{'ref': 'mrc_view', 'table': 'rc'},
-                 {'ref': 'gpa_view', 'table': 'gpa'},
-                 {'ref': 'spa_view', 'table': 'spa'}]
-        try:
-            for view in views:
-                ws = wb.create_sheet(f"{view['table']}-{today}", 0)
-                rs_found = self.cur.execute(
-                    f"select * from {view['ref']} order by indref")
-                ws.append(self.columns)
-                res_list = rs_found.fetchall()
-                for _ in res_list:
-                    ws.append(_)
-        except sql.OperationalError as e:
-            print(self.__class__, f"Error{e}")
+        self.WB = Workbook()
+        for view in views:
+            ws = self.WB.create_sheet(f"{view['table']}-{today}", 0)
+            rs_found = self.cur.execute(
+                f"select * from {view['ref']} order by indref")
+            ws.append(self.columns)
+            res_list = rs_found.fetchall()
+            for _ in res_list:
+                ws.append(_)
 
-        # Not found
-        ws = wb.create_sheet("Not Found", 0)
-        ws.append(['', 'ITEMS NOT FOUND', ''])
+        return self.search_by_primary()
+
+    def search_by_primary(self):
+        ws = self.WB.create_sheet("Guesses", 0)
+        rs_not_found = self.cur.execute('select * from not_found;')
+        rs_nf_list = rs_not_found.fetchall()
+        self.status.put(f"Done about 70%")
+        for _ in rs_nf_list:
+            ws.append(_)
+            gs_list = []
+            primArr = makePrimary(_[1])
+            for prim in primArr:
+                for tab in tables:
+                    que = f"select contract, name, coy, rate, gst, supplier \
+                    from {tab} where name like '%{prim}%'"
+                    rs_guess = self.cur.execute(que)
+                    gs_list.extend(rs_guess.fetchall())
+            gs_list = list(set(gs_list))
+            gs_list = createUniqueTupleList(gs_list)
+            print(gs_list)
+            for j in gs_list:
+                ws.append(j)
+            ws.append(["----------------------",
+                       "¯\_(ツ)_/¯", "----------------------"])
+        return self.add_not_found()
+
+    def add_not_found(self):
+        self.status.put(f"Done about 95%")
+        ws = self.WB.create_sheet("Not Found", 0)
         ws.append(["Indent Ref", "Name", "Quantity"])
         rs_not_found = self.cur.execute('select * from not_found;')
         for _ in rs_not_found:
             ws.append(_)
+        return self.ret_file()
 
+    def ret_file(self):
         # Create File
-        filename = f"created{date.today()}.xlsx"
+        filename = f"created{self.file_name}.xlsx"
         filepath = './static/uploads/' + filename
-        wb.save(filepath)
+        self.WB.save(filepath)
         self.status.put(f':{filepath}:')
         self.status.put('File Created!')
         return filepath
+
+    def insert(self, values):
+        que = f"insert into {self.tbl_name} (indref, name, alias, qty) values(?,?,?,?)"
+        try:
+            self.cur.execute(que, values)
+        except e:
+            print(self.__class__, f"Error{e}")
 
     def clear_db(self):
         que = f"delete from {self.tbl_name}"
@@ -101,15 +182,11 @@ class IdDataMaker:
         except sql.OperationalError:
             pass
 
-    def insert(self, values):
-        que = f"insert into {self.tbl_name} (indref, name, alias, qty) values(?,?,?,?)"
+    def create_table(self):
+        que = f"""create table {self.tbl_name} (indref varchar(200),name varchar(200), alias varchar(200),qty int)"""
         try:
-            self.cur.execute(que, values)
-        except sql.OperationalError as e:
-            print(self.__class__, f"Error{e}")
-            q = f"""create table {self.tbl_name} (indref varchar(200),name varchar(200), alias varchar(200),qty int)"""
-            self.cur.execute(q)
-            self.cur.execute(que, values)
+            self.cur.execute(que)
+        except sql.OperationalError:
             pass
 
     def create_views(self):
@@ -132,14 +209,14 @@ class IdDataMaker:
             or i.name like "%"||g.name||"%" 
             or i.alias like "%"||g.alias||"%";"""
             try:
-                print(que)
                 self.cur.execute(que)
                 self.status.put('Views Ready')
             except sql.OperationalError as e:
-                print(self.__class__, f"Error: {e}")
                 self.drop(view['ref'], 'view')
                 self.cur.execute(que)
                 pass
+            except e:
+                print(self.__class__, f"Error: {e}")
             self.status.put('Views Ready')
             # Not Found
         self.not_found_view()
@@ -176,7 +253,6 @@ class ReDataMaker:
         except sql.OperationalError as e:
             print(f'Error in init: {e}')
         self.pa_count = args
-        self.tblN = ['gpaSearchList', 'spaSearchList', 'rcSearchList']
         self.status = queue
 
     def refresh(self):
@@ -191,7 +267,7 @@ class ReDataMaker:
             sheet = self.file.active
             if not sheet_index < self.pa_count[tbl_set]:
                 tbl_set += 1
-            if(self.tblN[tbl_set] == 'rcSearchList'):
+            if(tables[tbl_set] == 'rcSearchList'):
                 rcTab = True
             contract_lst = sheet['C'][1:]
             name_lst = sheet['D'][1:]
@@ -208,7 +284,7 @@ class ReDataMaker:
                     break
                 value = [contract_lst[_].value,
                          str(name_lst[_].value).lower().strip(),
-                         cleaner(str(name_lst[_].value)),
+                         makeAlias(str(name_lst[_].value)),
                          unit_lst[_].value,
                          coy_lst[_].value,
                          rate_lst[_].value,
@@ -217,12 +293,12 @@ class ReDataMaker:
                 if(rcTab):
                     value.append(to_lst[_].value)
                     value.append(fr_lst[_].value)
-                self.insert(self.tblN[tbl_set], value, rcTab)
+                self.insert(tables[tbl_set], value, rcTab)
         self.status.put('Refresh Done!!')
 
     def clear_db(self):
         try:
-            for _ in self.tblN:
+            for _ in tables:
                 que = f"Delete from {_}"
                 self.cur.execute(que)
         except sql.OperationalError:

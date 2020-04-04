@@ -9,9 +9,6 @@ import threading
 import queue
 from re import findall
 
-# TODO:
-# Search Algorithm
-# Yield data to sockets
 
 UPLOAD_FOLDER = './static/uploads/'
 ALLOWED_EXTENSIONS = ['xlsx']
@@ -26,6 +23,7 @@ status_q = queue.Queue()
 @app.route('/')
 def index():
     return render_template('index.html')
+
 
 @app.route('/updatesearch')
 def update():
@@ -50,12 +48,14 @@ def refresh():
             re_thread = threading.Thread(
                 target=lambda: re_threader(app.config['UPLOAD_FOLDER'] + filename, int(gpa_count),
                                            int(gpa_count) + int(spa_count),
-                                           int(gpa_count) + int(spa_count) + int(rc_count)))
+                                           int(gpa_count) +
+                                           int(spa_count) + int(rc_count),
+                                           ))
             status_handle = threading.Thread(target=que_handeler)
             re_thread.start()
             status_handle.start()
         else:
-            socket.emit('WRONGFILE', {"msg": "Incorrect File Formt!"})
+            socket.emit('WRONGFILE', {"msg": "Incorrect File Format!"})
     except exceptions.HTTPException as e:
         print(e)
         socket.emit('NOFILE', {"msg": "No file provided!!"})
@@ -71,11 +71,12 @@ def re_threader(file_loc, pacount, spacount, rccount):
 def sort_it():
     try:
         file = request.files['file']
-        filename = str(date.today()) + secure_filename(file.filename)
+        filename = secure_filename(file.filename)
         if file and allowed_file(filename):
             socket.emit('OK', {"msg": ""})
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            sort_thread = threading.Thread(target=lambda: sort_threader(app.config['UPLOAD_FOLDER'] + filename))
+            sort_thread = threading.Thread(target=lambda: sort_threader(
+                app.config['UPLOAD_FOLDER'] + filename))
             status_handle = threading.Thread(target=que_handeler)
             sort_thread.start()
             status_handle.start()
@@ -101,7 +102,8 @@ def que_handeler():
             print(txt)
             socket.emit('update', {"status": 110, "text": txt})
             if txt == 'Insertion Done!!':
-                socket.emit('update', {"status": 210, "text": "Insertion Done"})
+                socket.emit('update', {"status": 210,
+                                       "text": "Insertion Done"})
             elif txt == 'Refresh Done!!':
                 socket.emit('update', {"status": 220, "text": 'Refreshed!'})
                 break
@@ -109,7 +111,8 @@ def que_handeler():
                 socket.emit('update', {"status": 200, "text": 'Completed'})
                 break
             elif findall(':.+?:', txt):
-                socket.emit('filepath', {"status": 200, "text": txt.replace(':', '')})
+                socket.emit('filepath', {"status": 200,
+                                         "text": txt.replace(':', '')})
         except queue.Empty:
             pass
 
@@ -117,7 +120,7 @@ def que_handeler():
 @app.route('/api/file', methods=['POST'])
 def filez():
     file = request.files['file']
-    filename = str(date.today()) + secure_filename(file.filename)
+    filename = secure_filename(file.filename)
     if file and allowed_file(filename):
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
     else:
@@ -139,5 +142,11 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+def initSetup():
+    print('Running Initial Setup')
+    pass
+
+
 if __name__ == '__main__':
+    initSetup()
     socket.run(app, port=3306, host='0.0.0.0')

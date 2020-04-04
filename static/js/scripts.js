@@ -34,7 +34,7 @@ socket.on('WRONGFILE', function (msg) {
     window.alert('File Error: ' + msg.msg)
 });
 socket.on('OK', function (msg) {
-    window.alert('Request Sent!!')
+    $('#logger').html('<p>File Added</p>');
 });
 
 function down() {
@@ -54,7 +54,8 @@ function app() {
 
 $(function () {
     $('#upload-file-btn').click(function () {
-
+        $('#logger').html('<p>Starting a new Search</p>');
+        $('#downloadBTN').prop('disabled', true);
         let form_data = new FormData($('#upload-file')[0]);
         $.ajax({
             type: 'POST',
@@ -64,7 +65,7 @@ $(function () {
             cache: false,
             processData: false,
             success: function (data) {
-                $('#logger').append('<p>Sorting Request Sent Successfully!</p>');
+                $('#logger').html('<p>Sorting Request Sent Successfully!</p>');
             },
         });
 
@@ -82,7 +83,7 @@ $(function () {
             cache: false,
             processData: false,
             success: function (data) {
-                $('#logger').append('<p>Refresh Request Sent Successfully!</p>');
+                $('#logger').html('<p>Refresh Request Sent Successfully!</p>');
             },
         });
     });
