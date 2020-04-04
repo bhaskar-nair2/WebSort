@@ -35,7 +35,7 @@ def clean(val, type):
         for _ in guess_ignore:
             val = val.replace(_, '').strip()
     val = sub(r'[(\[].+?[)\]]', ' ', val)
-    val = sub(r'[!@#$%^&*(),.?"/:{}|<>+=-]', ' ', val)
+    val = sub(r'[!@#$%^&*(),.?`\'"/:{}|<>+=-]', ' ', val)
     return val
 
 
@@ -71,7 +71,6 @@ class IdDataMaker:
         tit = file.title()
         fn = os.path.basename(tit)
         self.file_name = fn.split('.')[0]
-        print(self.file_name)
         self.file = load_workbook(file, data_only=True)
         self.WB = Workbook()
         try:
@@ -137,13 +136,11 @@ class IdDataMaker:
             primArr = makePrimary(_[1])
             for prim in primArr:
                 for tab in tables:
-                    que = f"select contract, name, coy, rate, gst, supplier \
-                    from {tab} where name like '%{prim}%'"
+                    que = f"""select contract, name, coy, rate, gst, supplier from {tab} where name like '%{prim}%'"""
                     rs_guess = self.cur.execute(que)
                     gs_list.extend(rs_guess.fetchall())
             gs_list = list(set(gs_list))
             gs_list = createUniqueTupleList(gs_list)
-            print(gs_list)
             for j in gs_list:
                 ws.append(j)
             ws.append(["----------------------",
@@ -311,8 +308,6 @@ class ReDataMaker:
             que = f"insert into {tbl} (contract, name, alias, unit, coy, rate, gst, supplier) values (?,?,?,?,?,?,?,?)"
         try:
             self.cur.execute(que, values)
-            print(
-                f"Inserting into {tbl} with {values[0]},{values[1]},{values[6]}")
         except sql.OperationalError as e:
             print(e)
             if(rcTab):

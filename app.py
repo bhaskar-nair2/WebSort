@@ -8,6 +8,7 @@ import os
 import threading
 import queue
 from re import findall
+from uuid import uuid4
 
 
 UPLOAD_FOLDER = './static/uploads/'
@@ -41,7 +42,7 @@ def refresh():
         spa_count = request.form['spa_count']
         rc_count = request.form['rc_count']
         file = request.files['file']
-        filename = str(date.today()) + secure_filename(file.filename)
+        filename = str(uuid4())+secure_filename(file.filename)
         if file and allowed_file(filename):
             socket.emit('OK', {"msg": ""})
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
@@ -71,7 +72,7 @@ def re_threader(file_loc, pacount, spacount, rccount):
 def sort_it():
     try:
         file = request.files['file']
-        filename = secure_filename(file.filename)
+        filename = secure_filename(file.filename)+str(uuid4())
         if file and allowed_file(filename):
             socket.emit('OK', {"msg": ""})
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
@@ -144,6 +145,7 @@ def allowed_file(filename):
 
 def initSetup():
     print('Running Initial Setup')
+    os.makedirs(os.path.join(app.config['UPLOAD_FOLDER']), exist_ok=True)
     pass
 
 
