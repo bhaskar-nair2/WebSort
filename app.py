@@ -72,7 +72,7 @@ def re_threader(file_loc, pacount, spacount, rccount):
 def sort_it():
     try:
         file = request.files['file']
-        filename = secure_filename(file.filename)+str(uuid4())
+        filename = make_file_name(secure_filename(file.filename))
         if file and allowed_file(filename):
             socket.emit('OK', {"msg": ""})
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
@@ -121,7 +121,7 @@ def que_handeler():
 @app.route('/api/file', methods=['POST'])
 def filez():
     file = request.files['file']
-    filename = secure_filename(file.filename)
+    filename = make_file_name(secure_filename(file.filename))
     if file and allowed_file(filename):
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
     else:
@@ -140,7 +140,14 @@ def test_disconnect():
 
 
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    return '.' in filename and filename.rsplit('.')[-1].lower() in ALLOWED_EXTENSIONS
+
+
+def make_file_name(filename):
+    nm = filename.split('.')
+    fin = ' '.join(nm[0:len(nm)-1])+str(uuid4())+'.'+nm[-1]
+    print(fin)
+    return fin
 
 
 def initSetup():
@@ -151,4 +158,4 @@ def initSetup():
 
 if __name__ == '__main__':
     initSetup()
-    socket.run(app, port=3306, host='0.0.0.0')
+    socket.run(app, host='localhost', port=3000)

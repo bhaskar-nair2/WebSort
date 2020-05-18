@@ -23,7 +23,8 @@ guess_ignore = ['insulin', 'collection', 'purified', 'equivalent',
                 'polythene', 'envelope', 'facility', 'disposable',
                 'plastic', 'sterile', 'suspension', 'inhaler', 'needles',
                 'injection', 'culture', 'solution', 'combination',
-                'sulphate', 'acetate', 'chloride'
+                'sulphate', 'acetate', 'chloride',
+                'test','kit','water','vial'
                 ]
 
 
@@ -53,7 +54,7 @@ def makePrimary(val):
     arr = val.split(' ')
     f_arr = list(filter(lambda e: len(e) > 6, arr))
     if len(f_arr) == 0:
-        f_arr = f_arr = list(filter(lambda e: len(e) > 4, arr))
+        f_arr = f_arr = list(filter(lambda e: len(e) >= 4, arr))
     f_arr.sort(key=len, reverse=True)
     return f_arr[0:5]
 
