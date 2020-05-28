@@ -3,8 +3,8 @@ from openpyxl.styles import Font
 import sqlite3 as sql
 from re import sub
 from datetime import date
-from queue import Queue
 import os
+import sys
 
 db = 'static/data/SearchDB'
 
@@ -24,7 +24,7 @@ guess_ignore = ['insulin', 'collection', 'purified', 'equivalent',
                 'plastic', 'sterile', 'suspension', 'inhaler', 'needles',
                 'injection', 'culture', 'solution', 'combination',
                 'sulphate', 'acetate', 'chloride',
-                'test','kit','water','vial'
+                'test', 'kit', 'water', 'vial'
                 ]
 
 
@@ -83,6 +83,15 @@ class IdDataMaker:
         self.status = queue
         self.columns = ['Indent No', 'Contract No', "Nomenclature",
                         "Unit", "Company", "Rate", "Quantity", "Amount", "GST", "Total Amount", "Supplier", 'from_date', "to_date"]
+    
+    def orcestrator(self):
+        print("Start")
+        self.data_gen()
+        self.add_found_results()
+        self.search_by_primary()
+        self.add_not_found()
+        return self.ret_file()
+
 
     def data_gen(self):
         flag = False
@@ -110,7 +119,6 @@ class IdDataMaker:
         self.status.put('Insertion Done!!')
         self.create_views()
         self.create_table()
-        return self.add_found_results()
 
     def add_found_results(self):
         today = date.today()
@@ -124,7 +132,6 @@ class IdDataMaker:
             for _ in res_list:
                 ws.append(_)
 
-        return self.search_by_primary()
 
     def search_by_primary(self):
         ws = self.WB.create_sheet("Guesses", 0)
@@ -146,7 +153,8 @@ class IdDataMaker:
                 ws.append(j)
             ws.append(["----------------------",
                        "¯\_(ツ)_/¯", "----------------------"])
-        return self.add_not_found()
+
+
 
     def add_not_found(self):
         self.status.put(f"Done about 95%")
@@ -155,7 +163,6 @@ class IdDataMaker:
         rs_not_found = self.cur.execute('select * from not_found;')
         for _ in rs_not_found:
             ws.append(_)
-        return self.ret_file()
 
     def ret_file(self):
         # Create File

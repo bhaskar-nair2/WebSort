@@ -1,38 +1,38 @@
-from flask import Flask, render_template, request
+from flask import Flask, request
 from flask_socketio import SocketIO, emit
+from flask_cors import CORS
 from werkzeug.utils import secure_filename
+from werkzeug.datastructures import ImmutableMultiDict
 from werkzeug import exceptions
 from datetime import date
+import json
 import Sorter
 import os
 import threading
 import queue
 from re import findall
 from uuid import uuid4
+import concurrent.futures
 
 
 UPLOAD_FOLDER = './static/uploads/'
 ALLOWED_EXTENSIONS = ['xlsx']
 
 app = Flask(__name__)
+CORS(app)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['DATABASE'] = db = 'static/data/SearchDB'
 socket = SocketIO(app, async_mode='threading')
 status_q = queue.Queue()
 
 
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-
-@app.route('/updatesearch')
-def update():
-    return render_template('searchUpdate.html')
-
-
 def wrapper(func, arg, res):
     res.append(func(arg))
+
+
+@app.route('/api/connect')
+def connect():
+    return "connected"
 
 
 @app.route('/api/refresh', methods=['POST'])
@@ -60,7 +60,7 @@ def refresh():
     except exceptions.HTTPException as e:
         print(e)
         socket.emit('NOFILE', {"msg": "No file provided!!"})
-    return render_template('index.html')
+    return "File Updated", 200
 
 
 def re_threader(file_loc, pacount, spacount, rccount):
@@ -72,28 +72,30 @@ def re_threader(file_loc, pacount, spacount, rccount):
 def sort_it():
     try:
         file = request.files['file']
+        cols = request.form
+        cols = cols.to_dict(flat=False)
         filename = make_file_name(secure_filename(file.filename))
+
         if file and allowed_file(filename):
-            socket.emit('OK', {"msg": ""})
+            socket.emit('update', {"status": 200, "text": "File Accepted"})
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            sort_thread = threading.Thread(target=lambda: sort_threader(
-                app.config['UPLOAD_FOLDER'] + filename))
-            status_handle = threading.Thread(target=que_handeler)
-            sort_thread.start()
-            status_handle.start()
-            sort_thread.join()
-            status_handle.join()
+            fileLoc = app.config['UPLOAD_FOLDER'] + filename
+
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(sort_threader, fileLoc, cols)
+                return_value = future.result()
+                print(return_value)
+                return json.dumps({"msg": "File Sorted", "result": return_value}), 200
         else:
-            socket.emit('WRONGFILE', {"msg": "Incorrect File Formt!"})
-    except exceptions.HTTPException as e:
+            return json.dumps({"msg": "File Format not allowed"}), 400
+    except Exception as e:
         print(e)
-        socket.emit('NOFILE', {"msg": "No file provided!!"})
-    return render_template('index.html')
+        return "Error", 500
 
 
-def sort_threader(file_loc):
-    srt = Sorter.IdDataMaker(file_loc, status_q)
-    srt.data_gen()
+def sort_threader(file_loc, cols):
+    sorter = Sorter.IdDataMaker(file_loc, status_q)
+    return sorter.orcestrator()
 
 
 def que_handeler():
@@ -126,7 +128,7 @@ def filez():
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
     else:
         print('File Not Valid!')
-    return render_template('index.html')
+    # return render_template('index.html')
 
 
 @socket.on('connect', namespace='/api')
