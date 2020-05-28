@@ -92,7 +92,7 @@ class IdDataMaker:
         sheet = self.file.active
         indref_lst = sheet['A'][1:]
         name_lst = sheet['B'][1:]
-        qty_lst = sheet['C'][1:]
+        qty_lst = sheet['D'][1:]
         for _ in range(len(name_lst)):
             if _ % 50 == 0 or _ == len(name_lst):
                 self.status.put(f"Done about {round(_/len(name_lst)*50)}%")
