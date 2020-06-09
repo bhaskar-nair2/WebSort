@@ -101,7 +101,7 @@ class IdDataMaker:
         sheet = self.file.active
         indref_lst = sheet['A'][1:]
         name_lst = sheet['B'][1:]
-        qty_lst = sheet['C'][1:]
+        qty_lst = sheet['D'][1:]
         for _ in range(len(name_lst)):
             if _ % 50 == 0 or _ == len(name_lst):
                 self.status.put(f"Done about {round(_/len(name_lst)*50)}%")
@@ -177,14 +177,15 @@ class IdDataMaker:
         que = f"insert into {self.tbl_name} (indref, name, alias, qty) values(?,?,?,?)"
         try:
             self.cur.execute(que, values)
-        except e:
+        except sql.OperationalError as e:
             print(self.__class__, f"Error{e}")
 
     def clear_db(self):
         que = f"delete from {self.tbl_name}"
         try:
             self.cur.execute(que)
-        except sql.OperationalError:
+        except sql.OperationalError as e:
+            print(f'Error ${e}')
             pass
 
     def create_table(self):

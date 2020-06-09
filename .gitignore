@@ -10,3 +10,5 @@ static/uploads
 RAW
 result
 uploads
+static/data/SearchDB
+__pycache__
