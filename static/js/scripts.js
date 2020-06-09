@@ -1,5 +1,6 @@
 let filepath = '';
 let socket = io.connect();
+
 socket.on('update', function (msg) {
     $('#logger').append(
         '<p>' + msg.text + '</p>'

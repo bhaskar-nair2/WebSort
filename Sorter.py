@@ -24,7 +24,7 @@ guess_ignore = ['insulin', 'collection', 'purified', 'equivalent',
                 'plastic', 'sterile', 'suspension', 'inhaler', 'needles',
                 'injection', 'culture', 'solution', 'combination',
                 'sulphate', 'acetate', 'chloride',
-                'test','kit','water','vial'
+                'test', 'kit', 'water', 'vial'
                 ]
 
 
@@ -170,14 +170,15 @@ class IdDataMaker:
         que = f"insert into {self.tbl_name} (indref, name, alias, qty) values(?,?,?,?)"
         try:
             self.cur.execute(que, values)
-        except e:
+        except sql.OperationalError as e:
             print(self.__class__, f"Error{e}")
 
     def clear_db(self):
         que = f"delete from {self.tbl_name}"
         try:
             self.cur.execute(que)
-        except sql.OperationalError:
+        except sql.OperationalError as e:
+            print(f'Error ${e}')
             pass
 
     def create_table(self):
